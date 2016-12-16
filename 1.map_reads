@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source globals.sh
+
+cd contigs
+if [ ! -e ../assembly/final.contigs.fa.bwt ]
+then
+    bwa index ../assembly/final.contigs.fa
+fi
+cd ..
+
+mkdir -p map_reads
+for file in $pe_files
+do
+	bn=`basename $file`
+	base=`echo $bn | sed "s/.fq.gz//g"`
+	echo $base
+	# run bwa mem, pipe to samtools for SAM to BAM pipe again for only mapped reads and pipe again for sort
+	if [ ! -e map_reads/$base.mapped.sorted.bam ]
+	then
+		bwa mem -t 1 ../assembly/final.contigs.fa $file | samtools view -h -b -S /dev/stdin | samtools view -b -F 4 /dev/stdin | samtools sort -m 1000000000 -o map_reads/$base.mapped.sorted.bam /dev/stdin  &
+	fi
+done
+
+wait

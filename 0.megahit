@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source globals.sh
+
+pe_files_comma=`echo "$pe_files" | sed "s/ /,/g"`
+se_files_comma=`echo "$se_files" | sed "s/ /,/g"`
+
+megahit --12 $pe_files_comma -r $se_files_comma --memory 0.95 --mem-flag 2 --out-dir assembly --num-cpu-threads 128 --presets meta-sensitive >& $0.log
+
+python $DESMAN/scripts/Lengths.py -i assembly/final.contigs.fa > assembly/final.contigs.len
