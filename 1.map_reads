@@ -2,15 +2,18 @@
 
 source globals.sh
 
-cd contigs
-if [ ! -e ../assembly/final.contigs.fa.bwt ]
+if [ ! -e map_reads/final.contigs.fa.bwt ]
 then
-    bwa index ../assembly/final.contigs.fa
+    cd map_reads
+    bwa index final.contigs.fa
+    samtools faidx final.contigs.fa
+    cd ..
 fi
-cd ..
+
+\rm -rf $0.jobs
 
 mkdir -p map_reads
-for file in $pe_files
+for file in $raw_files
 do
 	bn=`basename $file`
 	base=`echo $bn | sed "s/.fq.gz//g"`
@@ -18,8 +21,8 @@ do
 	# run bwa mem, pipe to samtools for SAM to BAM pipe again for only mapped reads and pipe again for sort
 	if [ ! -e map_reads/$base.mapped.sorted.bam ]
 	then
-		bwa mem -t 1 ../assembly/final.contigs.fa $file | samtools view -h -b -S /dev/stdin | samtools view -b -F 4 /dev/stdin | samtools sort -m 1000000000 -o map_reads/$base.mapped.sorted.bam /dev/stdin  &
+		echo "bwa mem -t 8 map_reads/final.contigs.fa $file | samtools view -h -b -S /dev/stdin | samtools view -b -F 4 /dev/stdin | samtools sort -m 1000000000 -o map_reads/$base.mapped.sorted.bam /dev/stdin" >> $0.jobs
 	fi
 done
 
-wait
+parallel --jobs 4 --joblog $0.jobs.log < $0.jobs
