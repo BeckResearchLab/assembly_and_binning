@@ -32,6 +32,7 @@
 * picard
 * pplacer
 * prodigal
+* pysam
 * R
 * samtools
 * spades
