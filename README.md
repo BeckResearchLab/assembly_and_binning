@@ -32,5 +32,6 @@
 * picard
 * pplacer
 * prodigal
+* R
 * samtools
 * spades
