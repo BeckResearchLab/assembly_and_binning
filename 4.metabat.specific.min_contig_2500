@@ -1,0 +1,17 @@
+#!/bin/bash
+
+DIR=metabat.specific.min_contig2500
+
+mkdir -p $DIR
+
+cd $DIR
+
+if [ ! -e depth.txt ]
+then
+    cp ../metabat/depth.txt .
+    #jgi_summarize_bam_contig_depths --outputDepth depth.txt ../map_reads/*.sorted.bam
+fi
+
+metabat -i ../assembly/final.contigs.fa -a depth.txt -o bin --minContig 2500 --saveTNF saved_2500.tnf --saveDistance saved_2500.dist -v -B 30 --keep --specific --pB 5
+cd ..
+checkm lineage_wf -f $DIR/CheckM.txt -t 36 -x fa $DIR/ $DIR/SCG --tmpdir /work/m4b_binning/tmp
