@@ -1,0 +1,27 @@
+#!/bin/bash
+
+R --no-save << EOF
+source('http://portal.nersc.gov/dna/RD/Metagenome_RD/MetaBAT/Files/benchmark.R')
+
+print("metabat")
+printPerf(list(calcPerfBySCG("metabat/CheckM.txt", removeStrain=F)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+printPerf(list(calcPerfBySCG("metabat/CheckM.txt", removeStrain=T)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+
+print("metabat specific")
+printPerf(list(calcPerfBySCG("metabat.specific/CheckM.txt", removeStrain=F)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+printPerf(list(calcPerfBySCG("metabat.specific/CheckM.txt", removeStrain=T)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+
+print("metabat specific with min contig 2500")
+printPerf(list(calcPerfBySCG("metabat.specific.min_contig2500/CheckM.txt", removeStrain=F)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+printPerf(list(calcPerfBySCG("metabat.specific.min_contig2500/CheckM.txt", removeStrain=T)), rec=c(seq(.1,.9,.1),.95), prec=c(seq(.6,.9,.1),.95,.99))
+
+
+print("comparisons")
+diffPerf(calcPerfBySCG("metabat.specific/CheckM.txt", removeStrain=F), calcPerfBySCG("metabat/CheckM.txt", removeStrain=F))
+
+diffPerf(calcPerfBySCG("metabat.specific.min_contig2500/CheckM.txt", removeStrain=F), calcPerfBySCG("metabat/CheckM.txt", removeStrain=F))
+
+diffPerf(calcPerfBySCG("metabat.specific.min_contig2500/CheckM.txt", removeStrain=F), calcPerfBySCG("metabat.specific/CheckM.txt", removeStrain=F))
+
+
+EOF
