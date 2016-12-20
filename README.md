@@ -1,6 +1,6 @@
 # Metagenomic assembly and binning pipeline for Beck Research Lab
 
-## Generalized protocol
+### Generalized protocol
 * Trim (see separate protocol repo)
 * Initial assembly
   * Use all reads from all libraries
@@ -13,3 +13,24 @@
 * Extract mapped reads
   * Include pairs, even if unmapped
 * Reassemble bins with mapped reads using spades
+
+### Required software
+* anaconda3
+* bam-readcount
+* bedtools
+* blast
+* bowtie2
+* bwa
+* checkm
+* CONCOCT
+* DESMAN
+* diamond
+* hmmer
+* megahit
+* metabat
+* parallel
+* picard
+* pplacer
+* prodigal
+* samtools
+* spades
