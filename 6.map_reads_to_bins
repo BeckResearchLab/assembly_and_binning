@@ -1,0 +1,35 @@
+#!/bin/bash
+
+bin_directory=metabat
+
+source globals.sh
+
+DIR=map_reads_to_bins
+
+mkdir -p $DIR
+
+bins=`ls metabat/bin.*.fa`
+
+cd $DIR
+\rm -rf $0.jobs
+
+for file in $bins
+do
+	bin=`basename $file`
+	echo $bin
+	mkdir -p $bin.dir
+	cp ../$file $bin.dir
+	cd $bin.dir
+	if [ ! -e $bin.bwt ]
+	then
+    		bwa index $bin
+		samtools faidx $bin
+	fi
+	# run bwa mem, pipe to samtools for SAM to BAM pipe and  pipe again for sort
+	echo "(cd $DIR/$bin.dir; bwa mem -t 8 $bin $pe_files | samtools view -h -b -S /dev/stdin | samtools sort -n -m 1000000000 -o map_reads/$base.mapped.sorted.bam /dev/stdin)" >> ../../$0.jobs
+	cd ..
+done
+
+cd ..
+
+parallel --jobs 4 --joblog $0.jobs.log < $0.jobs
