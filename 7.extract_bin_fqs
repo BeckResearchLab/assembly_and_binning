@@ -6,12 +6,24 @@ import os
 import pysam
 
 
+def process_bamfile(bam_path):
+    print "extracting reads from {}".format(bam_path)
+    bam_file = pysam.AlignmentFile(bam_path)
+    bam_file.close()
+
+
+def process_bin(bin_directory):
+    print "examining {}".format(bin_directory)
+    for bam_filename in os.listdir(bin_directory):
+        if bam_filename.endswidth(".namesorted.bam"):
+            process_alignments("{}/{}".format(bin_directory, bam_filename))
+
+
 def iterate_over_bins(map_directory):
     print "iterating over bins in {}".format(map_directory)
     for dirname in os.listdir(map_directory):
         if dirname.endswith(".dir"):
-            print "examining {}".format(dirname)
-
+            process_bin("{}/{}".format(map_directory, dirname))
         else:
             continue
 
