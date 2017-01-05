@@ -10,8 +10,8 @@ mkdir -p $DIR
 
 bins=`ls metabat/bin.*.fa`
 
-cd $DIR
 \rm -rf $0.jobs
+cd $DIR
 
 for file in $bins
 do
@@ -25,8 +25,8 @@ do
     		bwa index $bin
 		samtools faidx $bin
 	fi
-	# run bwa mem, pipe to samtools for SAM to BAM pipe and  pipe again for sort
-	echo "(cd $DIR/$bin.dir; bwa mem -t 8 $bin $pe_files | samtools view -h -b -S /dev/stdin | samtools sort -n -m 1000000000 -o map_reads/$base.mapped.sorted.bam /dev/stdin)" >> ../../$0.jobs
+	# run bwa mem, pipe to samtools for SAM to BAM pipe and  pipe again for sor
+	echo "(zcat $pe_files | bwa mem -t 8 $DIR/$bin.dir/$bin /dev/stdin | samtools view -h -b -S /dev/stdin | samtools sort -n -m 1000000000 -o $DIR/$bin.dir/$bin.namesorted.bam /dev/stdin)" >> ../../$0.jobs
 	cd ..
 done
 
