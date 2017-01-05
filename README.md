@@ -1,5 +1,6 @@
 # Metagenomic assembly and binning pipeline for Beck Research Lab
 
+
 ### Generalized protocol
 * Trim (see separate protocol repo)
 * Initial assembly
