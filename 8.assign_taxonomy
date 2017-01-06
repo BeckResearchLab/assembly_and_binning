@@ -1,0 +1,13 @@
+
+# phylophlan needs BioPython
+source activate py2
+
+# need to refresh bashrc stuff
+source ~/.bashrc
+
+cd /tmp/software/phylophlan
+
+# phylophlan wants a folder in /phylophlan/input/my_project_name with .faa files.
+# we have .fa files
+
+./phylophlan.py example_corynebacteria
