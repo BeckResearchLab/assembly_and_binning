@@ -10,4 +10,5 @@ then
 fi
 
 metabat -i ../assembly/final.contigs.fa -a depth.txt -o bin --minContig 1500 --saveTNF saved_1500.tnf --saveDistance saved_1500.dist -v -B 20 --keep
+cd ..
 checkm lineage_wf -f metabat/CheckM.txt -t 36 -x fa metabat/ metabat/SCG --tmpdir /work/m4b_binning/tmp
