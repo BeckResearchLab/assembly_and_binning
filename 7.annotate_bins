@@ -1,5 +1,5 @@
 # run prokka
 
-source activate mpy3  # for Pandas
+source activate py3  # for Pandas
 cd prokka
 python prokka.py
