@@ -5,9 +5,38 @@ source activate py2
 # need to refresh bashrc stuff
 source ~/.bashrc
 
-cd /tmp/software/phylophlan
+PHYLOPHLAN_DIR=/work/software/phylophlan/nsegata-phylophlan-8e2d2ec74872/
+#cd /work/software/phylophlan/nsegata-phylophlan-8e2d2ec74872
+cd $PHYLOPHLAN_DIR
 
 # phylophlan wants a folder in /phylophlan/input/my_project_name with .faa files.
 # we have .fa files
+mkdir -p ./input/metabat  # they want their fasta files there  :( 
 
-./phylophlan.py example_corynebacteria
+# remove any old files:
+rm ./input/metabat/*.faa
+
+echo "*** test version of script ***.  Update copy from /work/m4b_binning/metabat335/ to /work/m4b_binning/metabat/"
+
+for file in /work/m4b_binning/assembly/metabat335/*.fa
+do
+ fa=${file##*/}  #  remove all dirs (same as "basename $FILE")
+ echo "fa: " $fa
+ faa=$fa"a"  # so weird that we do this instead of $fa + "a"
+ echo "faa: " $faa
+ #dest_path="/work/software/phylophlan/input/metabat/"
+ dest_path=$PHYLOPHLAN_DIR/input/metabat/
+ echo "dest path: "$dest_path
+ faa_path=$dest_path$faa
+ echo "faa_path: " $faa_path
+ echo "cp $file $faa_path"
+
+ # the names look good, so copy them over. 
+ cp $file $faa_path
+done 
+
+#./phylophlan.py example_corynebacteria
+echo "pwd: "$pwd
+./phylophlan.py -u metabat
+
+# move desired results into local folder 
