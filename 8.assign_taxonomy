@@ -16,9 +16,7 @@ mkdir -p ./input/metabat  # they want their fasta files there  :(
 # remove any old files:
 rm ./input/metabat/*.faa
 
-echo "*** test version of script ***.  Update copy from /work/m4b_binning/metabat335/ to /work/m4b_binning/metabat/"
-
-for file in /work/m4b_binning/assembly/metabat335/*.fa
+for file in /work/m4b_binning/assembly/metabat/*.fa
 do
  fa=${file##*/}  #  remove all dirs (same as "basename $FILE")
  echo "fa: " $fa
