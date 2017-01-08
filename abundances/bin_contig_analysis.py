@@ -13,11 +13,12 @@ def summarise_contigs(fasta):
             line = line.rstrip('\n')
             line = line.strip('>')
             headers.append(line)
-    print(headers)
+    #print(headers)
     # prepare data frame
     info = pd.DataFrame({'contig':headers})
     info['file'] = os.path.basename(fasta)
     info['contigs'] = info.shape[0]  
+
     # get bin number
     m = re.search('bin.([0-9]+).fa', fasta)
     if m:
@@ -25,14 +26,23 @@ def summarise_contigs(fasta):
     else:
         bin = '??'
     info['bin'] = bin
-    print(info)
+
+    # column to match CheckM:
+    m = re.search('(bin.[0-9]+).fa', fasta)
+    if m:
+        bin_id = m.group(1)
+    else:
+        bin_id = '??'
+    info['Bin Id'] = bin_id  
+    info['bin_id'] = info['Bin Id'].str.replace('.', '_')
+    #print(info)
     return info
     
 
 def summarise_contigs_many_files(fasta_path_list):
     fasta_files = os.listdir(fasta_path_list)
     fasta_files = [os.path.join(fasta_path_list, f) for f in fasta_files]
-    print(fasta_files)
+    #print(fasta_files)
     fasta_files = [f for f in fasta_files if '.fa' in f]
     info = pd.DataFrame()
     for fasta_file in fasta_files:
