@@ -1,11 +1,13 @@
-
 # phylophlan needs BioPython
 source activate py2
 
 # need to refresh bashrc stuff
 source ~/.bashrc
 
-PHYLOPHLAN_DIR=/work/software/phylophlan/nsegata-phylophlan-8e2d2ec74872/
+# safety first
+set -eu
+
+PHYLOPHLAN_DIR=/work/software/phylophlan/
 #cd /work/software/phylophlan/nsegata-phylophlan-8e2d2ec74872
 cd $PHYLOPHLAN_DIR
 
@@ -14,15 +16,13 @@ cd $PHYLOPHLAN_DIR
 mkdir -p ./input/metabat  # they want their fasta files there  :( 
 
 # remove any old files:
-rm ./input/metabat/*.faa
+rm -f ./input/metabat/*.faa  # need `-f` when `set -eu`
 
-for file in /work/m4b_binning/assembly/metabat/*.fa
+for file in $(echo /work/m4b_binning/assembly/prokka/results/bin*/*.faa) 
 do
- fa=${file##*/}  #  remove all dirs (same as "basename $FILE")
- echo "fa: " $fa
- faa=$fa"a"  # so weird that we do this instead of $fa + "a"
+ echo $file
+ faa=${file##*/}  #  remove all dirs (same as "basename $FILE")
  echo "faa: " $faa
- #dest_path="/work/software/phylophlan/input/metabat/"
  dest_path=$PHYLOPHLAN_DIR/input/metabat/
  echo "dest path: "$dest_path
  faa_path=$dest_path$faa
@@ -34,7 +34,15 @@ do
 done 
 
 #./phylophlan.py example_corynebacteria
-echo "pwd: "$pwd
-./phylophlan.py -u metabat
+echo "pwd: "$(pwd)
+./phylophlan.py -i -t metabat
 
 # move desired results into local folder 
+mkdir -p /work/m4b_binning/assembly/phylophlan/
+cp $PHYLOPHLAN_DIR/output/metabat/* /work/m4b_binning/assembly/phylophlan/
+
+# ask it to make taxonomy
+# ./phylophlan -i metabat
+# *** WARNING *** Assuming DNA (see -seqtype option), invalid letters found: EFILPQ
+#
+#./phylophlan.py -t metabat
