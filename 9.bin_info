@@ -1,0 +1,13 @@
+source activate py3
+set -eu
+
+DIR=bin_info
+mkdir -p $DIR
+cd $DIR
+
+# make summary tsv of CheckM results
+python ./parse_CheckM.py -input ../metabat/CheckM.txt -output CheckM_results.tsv
+
+# parse phylophlan taxonomy
+python ./parse_phylophlan.py -input ../phylophlan/ -output phylophlan_result.tsv
+
