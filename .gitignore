@@ -2,6 +2,25 @@
 *.jobs
 *.swp
 
+bin_info/CheckM_qa.txt
+bin_info/CheckM_results.tsv
+bin_info/metabat_bins--all_info.tsv
+bin_info/metabat_bins.tsv
+bin_info/phylophlan_result.tsv
+checkm_qa.out_err
+
+data/all_taxa_lineage_notnone.tsv
+data/nr.dmnd
+data/nr.faa
+data/prot.accession2taxid.gz
+data/prot.accession2taxid.txt
+
+holding_area/
+
+metabat335/
+prokka/results/
+prokka/summary.csv
+
 data/HOW10/
 data/HOW11/
 data/HOW12/
