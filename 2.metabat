@@ -12,3 +12,6 @@ fi
 metabat -i ../assembly/final.contigs.fa -a depth.txt -o bin --minContig 1500 --saveTNF saved_1500.tnf --saveDistance saved_1500.dist -v -B 20 --keep
 cd ..
 checkm lineage_wf -f metabat/CheckM.txt -t 36 -x fa metabat/ metabat/SCG --tmpdir /work/m4b_binning/tmp
+
+# after running that, run `qa`, which can compute extra statistics and report in tabular form.  JM 170111
+checkm qa  ./metabat/SCG/lineage.ms ./metabat/SCG -t 10 --tab_table -o 2  -f ./metabat/CheckM_qa.txt   2>&1 | tee -a checkm_qa.out_err
