@@ -14,8 +14,11 @@ def checkm_to_pandas(file, output):
         entries = [e for e in entries if len(e) > 0]
         # remove newline
         entries = [e for e in entries if e != '\n']
+        entries = [e for e in entries if e != ' \n']
         new.append(entries)
-    df = pd.DataFrame(new)
+    df = pd.DataFrame(new[1:], columns=new[0])
+    # strip leading whitespace
+    df.columns = df.columns.str.strip(r'^ ')
     df.to_csv(output, sep='\t', index=False)
     file.close()
 
