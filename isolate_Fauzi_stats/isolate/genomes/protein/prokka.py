@@ -2,30 +2,31 @@ import os
 import pandas as pd
 import subprocess
 
-files = os.listdir('../metabat')
+source_dir = '../nucleotide'
+files = os.listdir(source_dir)
 print(len(files))
-fastas = [f for f in files if (".fa" in f) and ('bin.' in f)]
+fastas = [f for f in files if ".fa" in f]
 print(len(fastas))
 
-if not os.path.exists('./results'):
-    os.mkdir('./results')
+out_path = '.'
+if not os.path.exists(out_path):
+    os.mkdir(out_path)
 
-def bin_info(filename):
+def bin_info(filename, source_dir):
     substrings = filename.split('.')
-    name = 'bin_{}'.format(substrings[1])
+    name = '{}'.format(substrings[0])
     info = {'filename':filename, 
-            'number':substrings[1], 
             'name':name}
-    info['out_dir'] = os.path.join('./results', name)
-    info['path'] = os.path.join('../metabat', info['filename'])
-    info['stdout'] = 'results/{}/{}.out'.format(name, name)
-    info['stderr'] = 'results/{}/{}.err'.format(name, name)
+    info['out_dir'] = os.path.join(out_path, name)
+    info['path'] = os.path.join(source_dir, info['filename'])
+    info['stdout'] = os.path.join(out_path, '/{}/{}.out'.format(name, name))
+    info['stderr'] = os.path.join(out_path, '/{}/{}.err'.format(name, name))
     return info
 
 summary = pd.DataFrame()
 
 for fasta in fastas:
-    bin_info_dict = bin_info(fasta)
+    bin_info_dict = bin_info(fasta, source_dir)
     bin_info_df = pd.DataFrame({k:[v] for k, v in bin_info_dict.items()})
     summary = pd.concat([summary, bin_info_df], axis=0)
 
@@ -50,17 +51,16 @@ for index, row in summary.iterrows():
         pass
     else:
         filename = row['filename']
-        bin_name = row['name']
+        isolate_name = row['name']
         out_dir = row['out_dir']
         path = row['path']
-        bin_number = row['number']
         stdout_path = row['stdout']
         stderr_path = row['stderr']
         stdout_file = open(stdout_path, 'w+')
         stderr_file = open(stderr_path, 'w+')
     
         # replace when we get more info
-        locus_tag = 'metabat_bin_{}'.format(bin_number)
+        locus_tag = '{}'.format(isolate_name)
 
         command = ['prokka', path, 
                    '--outdir', out_dir, 
