@@ -15,7 +15,7 @@ def summarise_contigs(fasta):
             headers.append(line)
     #print(headers)
     # prepare data frame
-    info = pd.DataFrame({'contig':headers})
+    info = pd.DataFrame({'contigName':headers})
     info['file'] = os.path.basename(fasta)
     info['contigs'] = info.shape[0]  
 

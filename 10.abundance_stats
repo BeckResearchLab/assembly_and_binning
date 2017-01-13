@@ -1,0 +1,13 @@
+set -eu
+source activate py3
+
+mkdir -p abundances
+cd abundances
+
+# parse the contig names out of the bin fasta files
+python bin_contig_analysis.py -input ../metabat -output bin_contig_mappings.tsv
+
+# calculate abundances 
+python aggregate.py  
+
+
