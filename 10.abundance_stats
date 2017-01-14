@@ -1,5 +1,5 @@
-set -eu
 source activate py3
+set -eu
 
 mkdir -p abundances
 cd abundances

@@ -44,8 +44,7 @@ sort_orders.extend([0]*3) # make abundance, Completeness, and Contamination sort
 results_summary.sort_values(by=sort_cols, ascending=sort_orders, inplace=True)
 results_summary.to_csv('abundances_stats_for_each_bin_with_taxonomy_and_bin_stats.tsv', sep='\t', index=False)
 
-import pdb; pdb.set_trace()
-# summarise at the Genus level
+# summarise at the family level
 # Need to change the nan to "none" so it isn't dropped in the groupby
 family_level = results.copy()
 family_level['family'].fillna('none', inplace=True)
