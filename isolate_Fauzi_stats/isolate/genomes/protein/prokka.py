@@ -8,25 +8,25 @@ print(len(files))
 fastas = [f for f in files if ".fa" in f]
 print(len(fastas))
 
-out_path = '.'
+out_path = './' 
 if not os.path.exists(out_path):
     os.mkdir(out_path)
 
-def bin_info(filename, source_dir):
+def bin_info(filename, source_dir, out_path):
     substrings = filename.split('.')
     name = '{}'.format(substrings[0])
     info = {'filename':filename, 
             'name':name}
     info['out_dir'] = os.path.join(out_path, name)
     info['path'] = os.path.join(source_dir, info['filename'])
-    info['stdout'] = os.path.join(out_path, '/{}/{}.out'.format(name, name))
-    info['stderr'] = os.path.join(out_path, '/{}/{}.err'.format(name, name))
+    info['stdout'] = os.path.join(out_path, '{}/{}.out'.format(name, name))
+    info['stderr'] = os.path.join(out_path, '{}/{}.err'.format(name, name))
     return info
 
 summary = pd.DataFrame()
 
 for fasta in fastas:
-    bin_info_dict = bin_info(fasta, source_dir)
+    bin_info_dict = bin_info(fasta, source_dir, out_path)
     bin_info_df = pd.DataFrame({k:[v] for k, v in bin_info_dict.items()})
     summary = pd.concat([summary, bin_info_df], axis=0)
 
@@ -52,23 +52,31 @@ for index, row in summary.iterrows():
     else:
         filename = row['filename']
         isolate_name = row['name']
+        isolate_name_short = row['name'][0:2]
         out_dir = row['out_dir']
         path = row['path']
         stdout_path = row['stdout']
         stderr_path = row['stderr']
+        print("cwd: {}".format(os.getcwd()))
+        print("stdout_file: {}".format(stdout_path))
         stdout_file = open(stdout_path, 'w+')
         stderr_file = open(stderr_path, 'w+')
     
         # replace when we get more info
-        locus_tag = '{}'.format(isolate_name)
+        locus_tag = '{}'.format(isolate_name_short)
 
         command = ['prokka', path, 
+                   # add arg for 
+                    # [19:39:22] Loading and checking input file: ../nucleotide/Methylotenera_sp_G11.fa
+                    # [19:39:22] Contig ID must <= 20 chars long: GQ51DRAFT_unitig_0_quiver_dupTrim_10755.1
+                    # [19:39:22] Please rename your contigs or use --centre XXX to generate clean contig names.
+                    #'--compliant', 
+                    '--centre C --locustag L', 
+                   #'--centre', 'X',
                    '--outdir', out_dir, 
                    '--force', 'ON',  # force write over previous results; done so stdout, stderr handled more easily 
-                   '--locustag', locus_tag, 
-                   '--genus', '"Genus TBD"',  # add more detail later
-                   '--species', '"species TBD"',  # add more detail later
-                   '--strain', '"strain TBD"'] # add more detail later
+                   #'--locustag', locus_tag # add more detail later
+                    ]
         print(' '.join(command))
         subprocess.check_call(command, stdout=stdout_file, stderr=stderr_file)
         stdout_file.close()
