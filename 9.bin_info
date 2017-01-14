@@ -6,8 +6,12 @@ mkdir -p $DIR
 cd $DIR
 rm -f *.tsv
 
+# OLD: 
 # make summary tsv of CheckM results
-python ./parse_CheckM.py -input ../metabat/CheckM.txt -output CheckM_results.tsv
+# python ./parse_CheckM.py -input ../metabat/CheckM.txt -output CheckM_results.tsv
+
+# Move in new and improved CheckM results, with more bin statistics
+cp ./metabat/CheckM_qa.txt $DIR
 
 # parse phylophlan taxonomy
 python ./parse_phylophlan.py -input ../phylophlan/ -output phylophlan_result.tsv
