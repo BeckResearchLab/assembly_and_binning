@@ -10,4 +10,5 @@ python bin_contig_analysis.py -input ../metabat -output bin_contig_mappings.tsv
 # calculate abundances 
 python aggregate.py  
 
+python summarise_bin_abundance_stats_with_bin_info.py
 
