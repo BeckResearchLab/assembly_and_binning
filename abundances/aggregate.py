@@ -1,3 +1,4 @@
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -7,7 +8,11 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-def aggregate(contig_path, depth_path, sample_info_dir):
+def check_for_needed_files(*args):
+    for f in args:
+        assert os.path.exists(f), "file {} doen't exist".format(f)
+
+def aggregate(contig_path, depth_path, id_trans_path,  sample_details_path):
 
     contigs = pd.read_csv(contig_path, sep='\t', dtype={'bin':str})
 
@@ -49,9 +54,8 @@ def aggregate(contig_path, depth_path, sample_info_dir):
     assert(sample_sum_errors.max() < 0.0001)  # was on order of 1E-13 when I checked by hand
 
     # finally, merge on the info to get out of 'cryptic metagenome name' mess
-    id_trans_path = os.path.join(sample_info_dir, 'meta4_sample_names--cryptic_to_sample_number.tsv')
     cryptic_id_translations = pd.read_csv(id_trans_path, sep='\t')
-    sample_details = pd.read_csv(os.path.join(sample_info_dir, 'sample_info.tsv'), sep='\t')
+    sample_details = pd.read_csv(sample_details_path, sep='\t')
     assert sample_details.shape[0] == 88  # there is an 83-row problem version of the file
     sample_details = pd.merge(cryptic_id_translations, sample_details, how='outer')
     assert sample_details.shape[0] == 88  # check one more time 
@@ -67,10 +71,29 @@ def aggregate(contig_path, depth_path, sample_info_dir):
 
 
 if __name__ == '__main__':
-    
-    df = aggregate(contig_path = 'bin_contig_mappings.tsv', 
-                   depth_path = '../metabat/depth.txt', 
-                   # need two files:   '../data/sample_info/meta4_sample_names--cryptic_to_sample_number.tsv', '../data/sample_info/sample_info.tsv',   
-                   # for now, assume those paths will stay fixed and only pass the folder name as an arg. 
-                   sample_info_dir = '../data/sample_info/')
-    df.to_csv('bin_abundances.tsv', sep='\t', index=False)
+    parser = argparse.ArgumentParser(
+                prog='summarise_bin_abundance_for_each_sample',
+                description="""Script identifies which contigs belong to which bins and 
+                               summarises depth.txt for each bin in each sample""")
+
+    parser.add_argument("-contig_path", dest="contig_path", type=str, help="Specify the tsv that links contigs to bins")
+    parser.add_argument("-depth_path", dest="depth_path", type=str, help="path to metabat's depth.txt file")
+    parser.add_argument("-sample_info_dir", dest="sample_info_dir", type=str, help="path to sample info folder")
+
+    args = parser.parse_args()
+
+    if args.contig_path is None:
+        print(parser.print_help())
+    else:
+        id_trans_path = os.path.join(args.sample_info_dir, 'meta4_sample_names--cryptic_to_sample_number.tsv')
+        sample_details_path =  os.path.join(args.sample_info_dir, 'sample_info.tsv')
+        # check that all the files exist:
+        check_for_needed_files(args.contig_path, args.depth_path, id_trans_path,  sample_details_path)
+        
+        df = aggregate(contig_path = args.contig_path,
+                       depth_path = args.depth_path, 
+                       # need two files:   '../data/sample_info/meta4_sample_names--cryptic_to_sample_number.tsv', '../data/sample_info/sample_info.tsv',   
+                       # for now, assume those paths will stay fixed and only pass the folder name as an arg. 
+                       id_trans_path = id_trans_path,
+                       sample_details_path = sample_details_path)
+        df.to_csv('bin_abundances.tsv', sep='\t', index=False)
