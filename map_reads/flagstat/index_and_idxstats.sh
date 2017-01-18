@@ -2,6 +2,7 @@ bam_files=`ls ../*.bam`
 # echo $bam_files
 
 mkdir -p idxstat_results
+mkdir -p flagstat_results
 
 files_done=0
 for bam in $bam_files
@@ -16,6 +17,12 @@ do
 	idxcommand="samtools idxstats $bam > ./idxstat_results/$idxstats_out_path"
 	echo "idxcommand: $idxcommand"
 	eval $idxcommand
+
+	# do flagstat
+	flagstat_path="./flagstat_results/`basename $bam`.flagstat"
+	flagstat_command="samtools flagstat $bam > $flagstat_path"
+	echo "flagstat command: $flagstat_command"
+	eval $flagstat_command
 
 	# remove .bai file (they are quick to make, so no biggie)
 	#rm $bam.bai
