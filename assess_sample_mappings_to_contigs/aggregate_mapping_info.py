@@ -79,6 +79,11 @@ def parse_idxstats_bin_and_append_results(idxstat_dir, bins, outpath):
         print('done with file # {}'.format(files_completed))
 
 
+def mkdir(dirname):
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    
+
 if __name__ == '__main__':
     all_contig_lengths = pd.read_csv('../assembly/final.contigs.len', sep='\t', names = ['contig', 'len'])
     max_size = all_contig_lengths['len'].max()
@@ -86,14 +91,22 @@ if __name__ == '__main__':
     n_bins = 100
     # slick way to get bins for aggregation:
     # [int(n) for n in np.linspace(0, 100000, 11).tolist()]
-    bin_edges = [int(n) for n in np.linspace(0, magnitude, n_bins).tolist()]
+    bin_edges = np.linspace(0, magnitude, num=n_bins, dtype=int).tolist()
 
     outdir = './results'
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    outfile = os.path.join(outdir, 'results.tsv')
+    mkdir(outdir)
 
+    outfile_linear_bins = os.path.join(outdir, 'results--linear_bins.tsv')
     parse_idxstats_bin_and_append_results(
         '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
-        bins=bin_edges, outpath=outfile)
+        bins=bin_edges, outpath=outfile_linear_bins)
+
+    # Repeat with log-scale bins to zoom in on the < 10kb contigs
+    outfile_log10_bins= os.path.join(outdir, 'results--log10_bins.tsv')
+    # [     10,     100,    1000,   10000,  100000, 1000000]
+    bin_edges = np.logspace(start=1, stop=np.log10(magnitude), num=np.log10(magnitude), base=10, dtype=int).tolist()
+    parse_idxstats_bin_and_append_results(
+        '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
+        bins=bin_edges, outpath=outfile_log10_bins)
+    
 
