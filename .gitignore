@@ -21,6 +21,8 @@ metabat335/
 prokka/results/
 prokka/summary.csv
 
+*.bam
+*.bai
 *.fa
 data/HOW10/
 data/HOW11/
