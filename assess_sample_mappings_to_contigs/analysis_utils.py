@@ -40,6 +40,19 @@ def count_contigs_by_importance(percent_list):
         contigs = len(df['contig'].unique()) 
     print(p, contigs)
 
+def sort_contigs_by_importance(percent_cutoff, filename=None):
+    df = unbinned_contigs_appearing_with_at_least_x_percent_of_reads_in_one_sample(percent_cutoff)
+    max_importance = pd.DataFrame(df.groupby(['contig', 'contig length'])['frac reads for contig'].max())
+    max_importance.reset_index(inplace=True)
+    max_importance.rename(columns={'frac reads for contig':'max(frac reads for contig)'}, inplace=True)
+    max_importance.sort_values('max(frac reads for contig)', ascending=False, inplace=True)
+    if filename is not None:
+        max_importance.to_csv(filename, sep='\t', index=False)
+    else:
+        max_importance.to_csv('./results/most_important_contigs_for_cutoff_{}_percent.tsv'.format(percent_cutoff), 
+            sep='\t', index=False)
+    return max_importance
+
 def df_to_assess_impact_of_adding_contigs_to_bins(percent_cutoff):
     # get stats for binned contigs:
     bc = load_only_binned_or_unbinned(binned=True, groupby_sample=True)
