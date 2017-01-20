@@ -74,14 +74,50 @@ def parse_idxstats_bin_coarsely_and_append_results(idxstat_dir, bins, outpath):
 
         if files_completed == 0:
             df_coarsened.to_csv(outpath, sep='\t', index=False)
-        #elif files_completed > 3:
-        #    return
         else:
             # append to the already existing file
             df_coarsened.to_csv(outpath, sep='\t', mode='a', header=False, index=False)
         
         files_completed += 1
-        print('done with file # {}'.format(files_completed))
+        print('parse_idxstats_bin_coarsely_and_append_results(): done with file # {}'.format(files_completed))
+
+
+def individual_contig_summary(idxstat_dir, outpath):
+    idxstat_files = os.listdir(idxstat_dir)
+    idxstat_paths = [os.path.join(idxstat_dir, p) for p in idxstat_files]
+
+    # only has contigs that *do* map to bins
+    bin_contig_mappings = pd.read_csv('../abundances/bin_contig_mappings.tsv', sep='\t')
+    binned_contigs = bin_contig_mappings['contigName'].unique().tolist() # len = 304871
+    # bin_contig_mappings.columns = ['contigName', 'file', 'contigs', 'bin', 'Bin Id', 'bin_id']
+    bin_contig_mappings = bin_contig_mappings[['contigName', 'bin']]
+
+    files_completed = 0
+    for i in idxstat_paths:
+        df = parse_idxstat(i)
+        n_rows_before = df.shape[0]
+
+        # drop rows without reads mapped.
+        df = df[df['# mapped reads'] != 0]
+        n_rows_after = df.shape[0]
+        n_dropped = n_rows_before - n_rows_after
+        percent_dropped = (n_dropped/n_rows_before)*100
+        print('dropped {} rows ({})%'.format(n_dropped, percent_dropped))
+
+        df = merge_on_meta_info(df)
+        df['binned contig'] = False
+        df.loc[df['contig'].isin(binned_contigs), 'binned contig'] = True
+
+        if files_completed == 0:
+            assert df.shape[0] > 0, "df_coarsened has no rows left"
+            df.to_csv(outpath, sep='\t', index=False)
+        else:
+            # append to the already existing file
+            df.to_csv(outpath, sep='\t', mode='a', header=False, index=False)
+        
+
+        files_completed += 1
+        print('individual_contig_summary(): done with file # {}'.format(files_completed))
 
 
 def mkdir(dirname):
@@ -113,5 +149,8 @@ if __name__ == '__main__':
     parse_idxstats_bin_coarsely_and_append_results(
         '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
         bins=bin_edges, outpath=outfile_log10_bins)
+
+    outfile_all_contigs = os.path.join(outdir, 'individual_contig_summary.tsv')
+    individual_contig_summary('/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', outfile_all_contigs)
     
 
