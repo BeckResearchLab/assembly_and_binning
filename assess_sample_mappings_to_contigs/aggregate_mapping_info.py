@@ -27,7 +27,22 @@ def coarsen_size_distribution(df, bin_edges):
     sums['cryptic metagenome name'] = df['cryptic metagenome name'].iloc[0]
     return sums
 
-def parse_idxstats_bin_and_append_results(idxstat_dir, bins, outpath):
+def merge_on_meta_info(df):
+    # could be faster if I didn't read this every time!
+    sample_info = pd.read_csv('../data/sample_info/sample_info.tsv', sep='\t')
+    del sample_info['project']
+    sample_translation = pd.read_csv('../data/sample_info/meta4_sample_names--cryptic_to_sample_number.tsv', sep='\t')
+    sample_translation = sample_translation[['sample id', 'cryptic metagenome name']]
+    total_reads_per_sample = pd.read_csv('../data/sample_info/sample_read_counts.tsv', 
+                                         names=['cryptic metagenome name', 'total reads (in fastq)'], sep='\t')
+    total_reads_per_sample['cryptic metagenome name'] = total_reads_per_sample['cryptic metagenome name'].str.strip('.fastq.gz')
+
+    for sdf in [sample_translation, sample_info, total_reads_per_sample]:
+        df = pd.merge(df, sdf)
+    return df
+
+
+def parse_idxstats_bin_coarsely_and_append_results(idxstat_dir, bins, outpath):
     idxstat_files = os.listdir(idxstat_dir)
     idxstat_paths = [os.path.join(idxstat_dir, p) for p in idxstat_files]
 
@@ -36,14 +51,6 @@ def parse_idxstats_bin_and_append_results(idxstat_dir, bins, outpath):
     binned_contigs = bin_contig_mappings['contigName'].unique().tolist() # len = 304871
     # bin_contig_mappings.columns = ['contigName', 'file', 'contigs', 'bin', 'Bin Id', 'bin_id']
     bin_contig_mappings = bin_contig_mappings[['contigName', 'bin']]
-
-    sample_info = pd.read_csv('../data/sample_info/sample_info.tsv', sep='\t')
-    del sample_info['project']
-    sample_translation = pd.read_csv('../data/sample_info/meta4_sample_names--cryptic_to_sample_number.tsv', sep='\t')
-    sample_translation = sample_translation[['sample id', 'cryptic metagenome name']]
-    total_reads_per_sample = pd.read_csv('../data/sample_info/sample_read_counts.tsv', 
-                                         names=['cryptic metagenome name', 'total reads (in fastq)'], sep='\t')
-    total_reads_per_sample['cryptic metagenome name'] = total_reads_per_sample['cryptic metagenome name'].str.strip('.fastq.gz')
 
     files_completed = 0
     for i in idxstat_paths:
@@ -62,9 +69,7 @@ def parse_idxstats_bin_and_append_results(idxstat_dir, bins, outpath):
         unbinned_coarsened.rename(columns={'sum(reads mapped)':'sum(reads not mapped to bins)'}, inplace=True)
         df_coarsened = pd.merge(df_coarsened, unbinned_coarsened[['hist bin', 'sum(reads not mapped to bins)']], how='outer')
 
-        df_coarsened = pd.merge(df_coarsened, sample_translation)
-        df_coarsened = pd.merge(df_coarsened, sample_info)
-        df_coarsened = pd.merge(df_coarsened, total_reads_per_sample)
+        df_coarsened = merge_on_meta_info(df_coarsened)
         assert df_coarsened.shape[0] > 0, "df_coarsened has no rows left"
 
         if files_completed == 0:
@@ -97,7 +102,7 @@ if __name__ == '__main__':
     mkdir(outdir)
 
     outfile_linear_bins = os.path.join(outdir, 'results--linear_bins.tsv')
-    parse_idxstats_bin_and_append_results(
+    parse_idxstats_bin_coarsely_and_append_results(
         '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
         bins=bin_edges, outpath=outfile_linear_bins)
 
@@ -105,7 +110,7 @@ if __name__ == '__main__':
     outfile_log10_bins= os.path.join(outdir, 'results--log10_bins.tsv')
     # [     10,     100,    1000,   10000,  100000, 1000000]
     bin_edges = np.logspace(start=1, stop=np.log10(magnitude), num=np.log10(magnitude), base=10, dtype=int).tolist()
-    parse_idxstats_bin_and_append_results(
+    parse_idxstats_bin_coarsely_and_append_results(
         '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
         bins=bin_edges, outpath=outfile_log10_bins)
     
