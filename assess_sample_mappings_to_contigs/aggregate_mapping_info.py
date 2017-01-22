@@ -128,11 +128,12 @@ def mkdir(dirname):
 if __name__ == '__main__':
     all_contig_lengths = pd.read_csv('../assembly/final.contigs.len', sep='\t', names = ['contig', 'len'])
     max_size = all_contig_lengths['len'].max()
-    magnitude = 10** int(np.ceil(np.log10(max_size)))
-    n_bins = 100
+    print('max size: {}'.format(max_size))
     # slick way to get bins for aggregation:
     # [int(n) for n in np.linspace(0, 100000, 11).tolist()]
-    bin_edges = np.linspace(0, magnitude, num=n_bins, dtype=int).tolist()
+    bin_width = 2000
+    bin_edges = np.arange(0, max_size + bin_width, bin_width, dtype=int).tolist()
+    print(bin_edges[0:10])
 
     outdir = './results'
     mkdir(outdir)
@@ -145,7 +146,9 @@ if __name__ == '__main__':
     # Repeat with log-scale bins to zoom in on the < 10kb contigs
     outfile_log10_bins= os.path.join(outdir, 'results--log10_bins.tsv')
     # [     10,     100,    1000,   10000,  100000, 1000000]
+    magnitude = 10** int(np.ceil(np.log10(max_size)))
     bin_edges = np.logspace(start=1, stop=np.log10(magnitude), num=np.log10(magnitude), base=10, dtype=int).tolist()
+    print(bin_edges[0:10])
     parse_idxstats_bin_coarsely_and_append_results(
         '/work/m4b_binning/assembly/map_reads/flagstat/idxstat_results/', 
         bins=bin_edges, outpath=outfile_log10_bins)
