@@ -192,13 +192,11 @@ def count_contigs_by_length_range(df, bin_width):
     num_contigs['# contigs'].fillna(0)
     return num_contigs 
 
-def plot_frac_reads_binned_at_different_contig_lengths(bin_width, logx=True):
+def frac_reads_binned_at_different_contig_lengths(bin_width):
     """
-    While plotting total numbers of contigs at different bin lengths allows
-    observation of the vastly higher number of shorter contigs, the fraction
-    binned at different lengths is hard to see. 
-    Plotting as fractions hides the total number falling in each interval but
-    reveals what length contigs failed to be binned. 
+    Prepare a dataframe with statistics about the fractions binned and unbinned
+    along with the count of contigs at each contig-length interval.
+    Igores # of reads mapped at different lengths.
     """
     all_contigs = load_data()
     binned = load_only_binned_or_unbinned(binned=True)
@@ -223,6 +221,17 @@ def plot_frac_reads_binned_at_different_contig_lengths(bin_width, logx=True):
     assert (fracs['# binned + unbinned contigs'] - fracs['sum of contigs']).fillna(0).max() < 0.000001
     
     fracs['upper bound for contig length'] = bc['hist bin'].str.extract('([0-9]+)]')
+    return fracs
+
+def plot_frac_reads_binned_at_different_contig_lengths(bin_width, logx=True):
+    """
+    While plotting total numbers of contigs at different bin lengths allows
+    observation of the vastly higher number of shorter contigs, the fraction
+    binned at different lengths is hard to see. 
+    Plotting as fractions hides the total number falling in each interval but
+    reveals what length contigs failed to be binned. 
+    """
+    fracs = frac_reads_binned_at_different_contig_lengths(bin_width)
     xlabels = fracs['upper bound for contig length']
     frac_binned = fracs['frac binned contigs']
     frac_unbinned = fracs['frac unbinned contigs']
@@ -239,3 +248,5 @@ def plot_frac_reads_binned_at_different_contig_lengths(bin_width, logx=True):
         ax.set_xscale('log')
 
     return fig
+
+
