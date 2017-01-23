@@ -249,4 +249,38 @@ def plot_frac_reads_binned_at_different_contig_lengths(bin_width, logx=True):
 
     return fig
 
+def plot_frac_reads_binned_at_different_contig_lengths_and_total(bin_width, logx=True):
+    """
+    """
+    fracs = frac_reads_binned_at_different_contig_lengths(bin_width)
+    xlabels = fracs['upper bound for contig length']
+    frac_binned = fracs['frac binned contigs']
+    frac_unbinned = fracs['frac unbinned contigs']
+    x = [int(i) for i in xlabels.tolist()]
+
+    fig, axs = plt.subplots(2, 1, figsize=(7, 6), sharex=True, sharey=False)    
+    # scatter, not bar, because some of the fractions are NaN b/c of dividing by zero. 
+    # Top plot is total number of contigs.  Log scale. 
+    ax = axs[0]
+    y = fracs['# binned + unbinned contigs'].tolist()
+    y =  [np.nan if yval == 0 else yval for yval in y]
+    ax.scatter(x, y, alpha=0.5, color='#636363')
+    ax.set_yscale('log')
+    ax.set_ylim(1, max(y)) # cropping 10^7 to 10^8 without this
+    ax.set_ylabel('total number of contigs\n({} bp resolution)'.format(bin_width))
+
+    # Bottom plot is frac mapped. 
+    ax = axs[1]
+    ax.scatter(x, frac_binned.tolist(), alpha=0.5, color='#3182bd')
+    ax.set_xlabel('approx. contig size')
+    ax.set_ylabel('fraction of contigs binned\n({} bp resolution)'.format(bin_width))
+
+    for ax in axs:
+        if logx:
+            ax.set_xscale('log')
+        ax.get_xaxis().set_major_formatter(
+            matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+    return fig
+
 
