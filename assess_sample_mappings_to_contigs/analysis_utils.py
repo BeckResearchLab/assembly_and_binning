@@ -336,7 +336,7 @@ def summarise_contigs_by_contgig_size(
     
     return result
         
-def plot_num_reads_assigned_to_contigs_shorter_than_length_x(x=1000):
+def plot_num_reads_assigned_to_contigs_shorter_than_length_x(x=1500):
     df = summarise_contigs_by_contgig_size()
     print(df.head(1))
     fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=True, sharey=True, 
@@ -347,10 +347,10 @@ def plot_num_reads_assigned_to_contigs_shorter_than_length_x(x=1000):
     max_contig_size = x
     dfp = df[df['upper bound for contig length'] <= max_contig_size]
     sample_sums = dfp.groupby('sample id')['# mapped reads'].sum().to_frame().reset_index()
-    sample_sums.rename(columns={'# mapped reads':'sum(mapped reads)'}, inplace=True)
+    sample_sums.rename(columns={'# mapped reads':'sum(mapped reads) for contigs < {}bp'.format(max_contig_size)}, inplace=True)
 
     dfp = pd.merge(dfp, sample_sums)
-    dfp['frac reads mapped'] = dfp['sum(mapped reads)']/dfp['total reads (in fastq)']
+    dfp['frac reads mapped for contigs < {}bp'.format(max_contig_size)] = dfp['sum(mapped reads) for contigs < {}bp'.format(max_contig_size)]/dfp['total reads (in fastq)']
     dfp['sample total reads mapped'] = dfp['sample sum(reads mapped)']/dfp['total reads (in fastq)']
     dfp['sample total reads mapped to bins'] = dfp['sample sum(reads mapped) (all bins)']/dfp['total reads (in fastq)']
     dfp['max contig size'] = max_contig_size
@@ -366,10 +366,10 @@ def plot_num_reads_assigned_to_contigs_shorter_than_length_x(x=1000):
         color = colors[rep]
 
         # frac of reads mapped to contigs in df
-        ax.plot(plot_df['week'], plot_df['frac reads mapped'], 
-                linestyle='-', marker="s", color=color, label="replicate {}".format(rep))
+        ax.plot(plot_df['week'], plot_df['frac reads mapped for contigs < {}bp'.format(max_contig_size)], 
+                linestyle='-', marker="H", color=color, label="replicate {} (reads for contigs < {}bp)".format(rep, max_contig_size))
         handles, labels = ax.get_legend_handles_labels()  # "$\u2639$"
-        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.24, 1.05))
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.65, 1.05))
         
         # all the reads mapped to contigs
         ax.plot(plot_df['week'], plot_df['sample total reads mapped'],
@@ -494,8 +494,8 @@ def plot_good_vs_bad_low_o2_samples(binwidth):
     
     fig, axs = plt.subplots(1, 1, figsize=(4, 3)) #, sharex=True, sharey=True)
     
-    green = '#a1d99b'
-    orange = '#fec44f'
+    green = '#31a354'
+    orange = '#d95f0e'
     colors = {('low', 8):orange, ('low', 9):orange, ('low', 10):orange, ('low', 11):green, ('low', 12):green, ('low', 13):green,
               ('high', 10):green, ('high', 11):orange}
     print(colors)
@@ -505,7 +505,7 @@ def plot_good_vs_bad_low_o2_samples(binwidth):
     x = 'upper bound for contig length'
     y = 'frac reads assigned to contigs this length'
     
-    fig.suptitle("# reads in each samples' .fastq", size=14)
+    fig.suptitle("Fraction of reads assigned to contigs of different lengths", size=14)
     
     def get_unique(df_x, col):
         uniques = df_x[col].unique()
@@ -514,11 +514,12 @@ def plot_good_vs_bad_low_o2_samples(binwidth):
     
     df_extracts.sort_values('week', inplace=True)
     
-    for sample_id, plot_df in df_extracts.groupby(['sample id']):
+    for sample_id, plot_df in df_extracts.groupby(['sample id'], sort=False):
         o2 = get_unique(plot_df, 'oxygen') 
         rep = get_unique(plot_df, 'replicate') 
         week = get_unique(plot_df, 'week')
         label = "{} O2, rep {}, week {}".format(o2, rep, week)
+        print(label)
         shape = shapes[rep]
         
         plot_df.sort_values('upper bound for contig length', inplace=True)
@@ -528,7 +529,7 @@ def plot_good_vs_bad_low_o2_samples(binwidth):
         
         ax.plot(plot_df[x], plot_df[y],
                 linestyle='-', marker=shape, color=color, label=label,
-                alpha = 1)
+                alpha = 0.5)
         handles, labels = ax.get_legend_handles_labels()
         lgd = ax.legend(handles, labels, bbox_to_anchor=(1.75, 1.05))
 
