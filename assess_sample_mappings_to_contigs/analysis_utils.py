@@ -65,7 +65,6 @@ def df_to_assess_impact_of_adding_contigs_to_bins(percent_cutoff):
     # get stats for binned contigs:
     bc = load_only_binned_or_unbinned(binned=True, groupby_sample=True)
     bc.rename(columns={'sum(frac reads for contig)':'frac reads accounted for by binned contigs'}, inplace=True)
-    print(bc.head())
     
     # get stats for un-binned contigs:
     ubc = unbinned_contigs_appearing_with_at_least_x_percent_of_reads_in_one_sample(percent_cutoff) 
@@ -283,4 +282,261 @@ def plot_frac_reads_binned_at_different_contig_lengths_and_total(bin_width, logx
 
     return fig
 
+def summarise_contigs_by_contgig_size(
+    size_boundaries_list=[10**2, 500, 10**3, 5*10**3, 10**4, 5*10**4, 10**5, 5*10**5, 10**6]):
+    df = load_data()
+    df['hist bin'] = pd.cut(df['contig length'], bins=size_boundaries_list)
+    df['(# mapped reads)/(contig len)'] = df['# mapped reads']/df['contig length']
+    df_orig = df.copy()
+    
+    # add count of reads by sample across contig length
+    total_mapped_by_sample = df.groupby('sample id')['# mapped reads'].sum().to_frame().reset_index()
+    total_mapped_by_sample.rename(columns={'# mapped reads':'sample sum(reads mapped)'}, 
+                                  inplace=True)
+    df = pd.merge(df, total_mapped_by_sample, how='outer')
+    
+    # add count for frac mapped reads
+    binned_reads_by_sample = df[df['binned contig'] == True].groupby('sample id')['# mapped reads'].sum().to_frame().reset_index()
+    binned_reads_by_sample.rename(columns={'# mapped reads':
+                                           'sample sum(reads mapped) (all bins)'}, 
+                                  inplace=True)
+    df = pd.merge(df, binned_reads_by_sample, how='outer')
+    
+    num_reads = df.groupby(['sample id','hist bin'])['# mapped reads'].sum().to_frame().reset_index()
+    result = df[['sample id', 'oxygen', 'replicate', 'week', 
+                 'total reads (in fastq)', 'sample sum(reads mapped)',
+                 'sample sum(reads mapped) (all bins)']
+               ].drop_duplicates()
+    result = pd.merge(result, num_reads)
+    result['upper bound for contig length'] = result['hist bin'].str.extract('([0-9]+)]').astype(int)
+    
+    # add avg counts/bp:
+    counts_per_bp = df_orig.groupby(['sample id','hist bin'])['(# mapped reads)/(contig len)'].mean().to_frame().reset_index()
+    counts_per_bp.rename(columns={'(# mapped reads)/(contig len)':
+                                  'mean((# mapped reads)/(contig len))'}, 
+                                  inplace=True)
+    result = pd.merge(result, counts_per_bp, how='outer')
+    # add avg counts/bp, unbinned :
+    counts_per_bp_unbinned = df_orig[df_orig['binned contig'] == False].groupby(
+        ['sample id','hist bin'])['(# mapped reads)/(contig len)'
+                                 ].mean().to_frame().reset_index()
+    counts_per_bp_unbinned.rename(columns={'(# mapped reads)/(contig len)':
+                                  'mean((# mapped reads)/(contig len)), unbinned'}, 
+                                  inplace=True)
+    result = pd.merge(result, counts_per_bp_unbinned, how='outer')
+    
+    # add avg counts/bp, binned :
+    counts_per_bp_unbinned = df_orig[df_orig['binned contig'] == True].groupby(
+        ['sample id','hist bin'])['(# mapped reads)/(contig len)'
+                                 ].mean().to_frame().reset_index()
+    counts_per_bp_unbinned.rename(columns={'(# mapped reads)/(contig len)':
+                                  'mean((# mapped reads)/(contig len)), binned'}, 
+                                  inplace=True)
+    result = pd.merge(result, counts_per_bp_unbinned, how='outer')
+    
+    return result
+        
+def plot_num_reads_assigned_to_contigs_shorter_than_length_x(x=1000):
+    df = summarise_contigs_by_contgig_size()
+    print(df.head(1))
+    fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=True, sharey=True, 
+                            subplot_kw = {'ylim':(0,1)})
+    o2_dict = {'low': axs[0], 'high': axs[1]}
+    colors = {1:'#66c2a5', 2:'#fc8d62', 3:'#8da0cb', 4:'#e78ac3'}
+    
+    max_contig_size = x
+    dfp = df[df['upper bound for contig length'] <= max_contig_size]
+    sample_sums = dfp.groupby('sample id')['# mapped reads'].sum().to_frame().reset_index()
+    sample_sums.rename(columns={'# mapped reads':'sum(mapped reads)'}, inplace=True)
 
+    dfp = pd.merge(dfp, sample_sums)
+    dfp['frac reads mapped'] = dfp['sum(mapped reads)']/dfp['total reads (in fastq)']
+    dfp['sample total reads mapped'] = dfp['sample sum(reads mapped)']/dfp['total reads (in fastq)']
+    dfp['sample total reads mapped to bins'] = dfp['sample sum(reads mapped) (all bins)']/dfp['total reads (in fastq)']
+    dfp['max contig size'] = max_contig_size
+    
+    
+    fig.suptitle('number of reads assigned to contigs shorter than {} bp'.format(x))
+    labels = ['rep {}'.format(n) for n in [1, 2, 3, 4]]
+    
+    for (o2, rep), plot_df in dfp.groupby(['oxygen', 'replicate']):
+        print(o2, rep)
+        plot_df.sort_values('week', inplace=True)
+        ax = o2_dict[o2]
+        color = colors[rep]
+
+        # frac of reads mapped to contigs in df
+        ax.plot(plot_df['week'], plot_df['frac reads mapped'], 
+                linestyle='-', marker="s", color=color, label="replicate {}".format(rep))
+        handles, labels = ax.get_legend_handles_labels()  # "$\u2639$"
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.24, 1.05))
+        
+        # all the reads mapped to contigs
+        ax.plot(plot_df['week'], plot_df['sample total reads mapped'],
+                linestyle='--', marker="o", color=color, alpha = .3, label="")
+        
+        # frac of reads mapped to binned contigs
+        ax.plot(plot_df['week'], plot_df['sample total reads mapped to bins'],
+                linestyle='--', marker=r"$b$", color=color, alpha = .3, label="")
+        
+        ax.set_ylabel('fraction of reads'.format(x))       
+        ax.set_xlabel('week')
+        
+    axs[0].set_title('low oxygen')
+    axs[1].set_title('high oxygen')
+    plt.subplots_adjust(hspace=0.25)
+    
+    return fig
+
+def plot_log_ratio_of_coverage_like_metric():
+    df = summarise_contigs_by_contgig_size()
+    fig, axs = plt.subplots(2, 1, figsize=(4, 8), sharex=True, sharey=True, )
+    o2_dict = {'low': axs[0], 'high': axs[1]}
+    colors = {1:'#66c2a5', 2:'#fc8d62', 3:'#8da0cb', 4:'#e78ac3'}
+    
+    x = 'mean((# mapped reads)/(contig len)), binned'
+    y = 'mean((# mapped reads)/(contig len)), unbinned'
+    df['ratio'] = df[y]/df[x]
+    df['log_2(ratio)'] = np.log2(df[y]/df[x])
+    min_ratio = df['ratio'].min()
+    max_ratio = df['ratio'].max()
+    print('min: {}, max: {}'.format(min_ratio, max_ratio))
+    
+    fig.suptitle('log ratio of mean "coverage"')
+    labels = ['rep {}'.format(n) for n in [1, 2, 3, 4]]
+    
+    for (o2, rep), plot_df in df.groupby(['oxygen', 'replicate']):
+        #plot_df.sort_values('week', inplace=True)
+        ax = o2_dict[o2]
+        color = colors[rep]
+
+        # frac of reads mapped to contigs in df
+
+        print((plot_df[y]/plot_df[x]).head(10))
+        
+        ax.plot(plot_df['upper bound for contig length'], 
+                plot_df['log_2(ratio)'],
+                linestyle='', marker="o", color=color, label="replicate {}".format(rep), 
+                alpha = 0.3)
+        handles, labels = ax.get_legend_handles_labels()  
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.5, 1.05))
+    
+        ax.set_xlabel('contig length-ish')
+        ax.set_ylabel('log2(unbinned/binned) for reads/len')       
+        ax.axhline(y=0, color='gray', linestyle='-')
+        ax.set_xscale('log')
+        
+    axs[0].set_title('low oxygen')
+    axs[1].set_title('high oxygen')
+    plt.subplots_adjust(hspace=0.25)
+    
+    return fig
+    
+def plot_num_reads_across_samples():
+    """
+    Plot number of reads in .fastq (unproccessed original data)
+    """
+    df = load_data()
+    info = df[['sample id', 'oxygen', 'replicate', 'week', 
+               'total reads (in fastq)']].drop_duplicates()
+    print("info.shape: {}".format(info.shape))
+    print(info.head())
+    fig, axs = plt.subplots(2, 1, figsize=(4, 8), sharex=True, sharey=True, )
+    
+    o2_dict = {'low': axs[0], 'high': axs[1]}
+    colors = {1:'#66c2a5', 2:'#fc8d62', 3:'#8da0cb', 4:'#e78ac3'}
+
+    x = 'week'
+    y = 'total reads (in fastq)'
+    
+    fig.suptitle("# reads in each samples' .fastq", size=16)
+    
+    for (o2, rep), plot_df in info.groupby(['oxygen', 'replicate']):
+        plot_df.sort_values('week', inplace=True)
+        ax = o2_dict[o2]
+        color = colors[rep]
+        
+        ax.plot(plot_df[x], plot_df[y],
+                linestyle='-', marker="o", color=color, label="replicate {}".format(rep),
+                alpha = 1)
+        handles, labels = ax.get_legend_handles_labels()
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.5, 1.05))
+
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.axhline(y=0, color='gray', linestyle='-')
+
+    axs[0].set_title('low oxygen')
+    axs[1].set_title('high oxygen')
+    plt.subplots_adjust(hspace=0.25)
+    
+    return fig
+    
+def prepare_bins(binwidth):
+    # got max_size from max_contig_size = load_data()['contig length'].max()
+    max_contig_size=686225
+    print('max contig size: {}'.format(max_contig_size))
+    bins = np.arange(0, max_contig_size + binwidth, binwidth).tolist()
+    print('first bins for binwidth {}: {}'.format(binwidth, bins[0:10]))
+    return bins
+
+def plot_good_vs_bad_low_o2_samples(binwidth):
+    bins = prepare_bins(binwidth)
+    df = summarise_contigs_by_contgig_size(bins)
+    
+    df['frac reads assigned to contigs this length'] = df['# mapped reads']/df['total reads (in fastq)']
+    print(df.columns)
+    df_extract2 = df[(df['oxygen']== 'low') & 
+                     ((df['replicate']== 2) | (df['replicate']== 1)) & 
+                     df['week'].isin([8, 9, 10, 11, 12, 13])]
+    df_extracts = df_extract2
+    
+    
+    fig, axs = plt.subplots(1, 1, figsize=(4, 3)) #, sharex=True, sharey=True)
+    
+    green = '#a1d99b'
+    orange = '#fec44f'
+    colors = {('low', 8):orange, ('low', 9):orange, ('low', 10):orange, ('low', 11):green, ('low', 12):green, ('low', 13):green,
+              ('high', 10):green, ('high', 11):orange}
+    print(colors)
+    
+    shapes = {1:'o', 2:'^'}
+
+    x = 'upper bound for contig length'
+    y = 'frac reads assigned to contigs this length'
+    
+    fig.suptitle("# reads in each samples' .fastq", size=14)
+    
+    def get_unique(df_x, col):
+        uniques = df_x[col].unique()
+        assert len(uniques) == 1, "too many unique values for {}: {}".format(col, uniques)
+        return uniques[0]
+    
+    df_extracts.sort_values('week', inplace=True)
+    
+    for sample_id, plot_df in df_extracts.groupby(['sample id']):
+        o2 = get_unique(plot_df, 'oxygen') 
+        rep = get_unique(plot_df, 'replicate') 
+        week = get_unique(plot_df, 'week')
+        label = "{} O2, rep {}, week {}".format(o2, rep, week)
+        shape = shapes[rep]
+        
+        plot_df.sort_values('upper bound for contig length', inplace=True)
+        
+        ax=axs
+        color = colors[(o2, week)]
+        
+        ax.plot(plot_df[x], plot_df[y],
+                linestyle='-', marker=shape, color=color, label=label,
+                alpha = 1)
+        handles, labels = ax.get_legend_handles_labels()
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.75, 1.05))
+
+        ax.set_xlabel(x)
+        ax.set_ylabel('frac reads assigned to\ncontigs this length')
+        ax.axhline(y=0, color='gray', linestyle='-')
+        ax.set_xscale('log')
+
+    plt.subplots_adjust(hspace=0.25)
+    
+    return fig 
