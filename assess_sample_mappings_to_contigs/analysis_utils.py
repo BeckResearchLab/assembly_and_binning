@@ -541,3 +541,73 @@ def plot_good_vs_bad_low_o2_samples(binwidth):
     plt.subplots_adjust(hspace=0.25)
     
     return fig 
+
+def plot_good_vs_bad_low_o2_samples_all_reps(binwidth=1500):
+    """
+    Replaces plot_good_vs_bad_low_o2_samples().  Plot all Low2 samples for week >=8.
+    """
+    bins = prepare_bins(binwidth)
+    df = summarise_contigs_by_contgig_size(bins)
+
+    df['frac reads assigned to contigs this length'] = df['# mapped reads']/df['total reads (in fastq)']
+    print(df.columns)
+    df_extract2 = df[(df['oxygen']== 'low') &
+                     #((df['replicate']== 2) | (df['replicate']== 1)) &
+                     df['week'].isin([8, 9, 10, 11, 12, 13])]
+    df_extracts = df_extract2
+
+
+    fig, axs = plt.subplots(1, 1, figsize=(4, 3)) #, sharex=True, sharey=True)
+
+    green = '#31a354'
+    orange = '#d95f0e'
+    def assign_color(rep, week):
+        if rep == 3 or rep == 4:
+            return orange
+        # now only reps 1 and 2 remain.  These became good after week 10. 
+        if week >= 11:
+            return green
+        else:
+            return orange
+
+    shapes = {1:'o', 2:'o', 3:'.', 4:'.'}
+
+    x = 'upper bound for contig length'
+    y = 'frac reads assigned to contigs this length'
+
+    fig.suptitle("fraction of reads assigned to\ncontigs of different lengths", size=14)
+    
+    def get_unique(df_x, col):
+        uniques = df_x[col].unique()
+        assert len(uniques) == 1, "too many unique values for {}: {}".format(col, uniques)
+        return uniques[0]
+
+    df_extracts.sort_values(['week', 'replicate'], inplace=True)
+
+    for sample_id, plot_df in df_extracts.groupby(['sample id'], sort=False):
+        o2 = get_unique(plot_df, 'oxygen')
+        rep = get_unique(plot_df, 'replicate')
+        week = get_unique(plot_df, 'week')
+        label = "{} O2, rep {}, week {}".format(o2, rep, week)
+        print(label)
+        shape = shapes[rep]
+
+        plot_df.sort_values('upper bound for contig length', inplace=True)
+
+        ax=axs
+        color = assign_color(rep, week)
+
+        ax.plot(plot_df[x], plot_df[y],
+                linestyle='-', marker=shape, color=color, label=label,
+                alpha = 0.5)
+        handles, labels = ax.get_legend_handles_labels()
+        lgd = ax.legend(handles, labels, bbox_to_anchor=(1.75, 1.7))
+
+        ax.set_xlabel(x)
+        ax.set_ylabel('frac reads assigned to\ncontigs this length')
+        ax.axhline(y=0, color='gray', linestyle='-')
+        ax.set_xscale('log')
+
+    plt.subplots_adjust(hspace=0.25, top=0.8)
+
+    return fig
