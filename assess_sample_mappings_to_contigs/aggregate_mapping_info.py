@@ -47,7 +47,7 @@ def parse_idxstats_bin_coarsely_and_append_results(idxstat_dir, bins, outpath):
     idxstat_paths = [os.path.join(idxstat_dir, p) for p in idxstat_files]
 
     # only has contigs that *do* map to bins
-    bin_contig_mappings = pd.read_csv('../abundances/bin_contig_mappings.tsv', sep='\t')
+    bin_contig_mappings = pd.read_csv('../abundances/results/bin_contig_mappings.tsv', sep='\t')
     binned_contigs = bin_contig_mappings['contigName'].unique().tolist() # len = 304871
     # bin_contig_mappings.columns = ['contigName', 'file', 'contigs', 'bin', 'Bin Id', 'bin_id']
     bin_contig_mappings = bin_contig_mappings[['contigName', 'bin']]
@@ -87,7 +87,7 @@ def individual_contig_summary(idxstat_dir, outpath):
     idxstat_paths = [os.path.join(idxstat_dir, p) for p in idxstat_files]
 
     # only has contigs that *do* map to bins
-    bin_contig_mappings = pd.read_csv('../abundances/bin_contig_mappings.tsv', sep='\t')
+    bin_contig_mappings = pd.read_csv('../abundances/results/bin_contig_mappings.tsv', sep='\t')
     binned_contigs = bin_contig_mappings['contigName'].unique().tolist() # len = 304871
     # bin_contig_mappings.columns = ['contigName', 'file', 'contigs', 'bin', 'Bin Id', 'bin_id']
     bin_contig_mappings = bin_contig_mappings[['contigName', 'bin']]

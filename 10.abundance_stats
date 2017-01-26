@@ -3,12 +3,15 @@ set -eu
 
 mkdir -p abundances
 cd abundances
+tsv_dir=./results
+mkdir -p $tsv_dir
 
 # parse the contig names out of the bin fasta files
-python bin_contig_analysis.py -input ../metabat -output bin_contig_mappings.tsv
+python bin_contig_analysis.py -input ../metabat -output $tsv_dir/bin_contig_mappings.tsv
 
-# calculate abundances 
-python aggregate.py -contig_path bin_contig_mappings.tsv -depth_path ../metabat/depth.txt -sample_info_dir ../data/sample_info/
+# calculate abundances.  Uses 20+ GB memory.  Could redsign script to iterate and append...
+python aggregate.py -contig_path $tsv_dir/bin_contig_mappings.tsv -depth_path ../metabat/depth.txt -sample_info_dir ../data/sample_info/
+mv bin_abundances.tsv $tsv_dir/bin_abundances.tsv
 
 python summarise_bin_abundance_stats_with_bin_info.py
 

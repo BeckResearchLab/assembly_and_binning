@@ -5,7 +5,7 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-abundances = pd.read_csv('./bin_abundances.tsv', sep='\t')
+abundances = pd.read_csv('./results/bin_abundances.tsv', sep='\t')
 bin_details = pd.read_csv('../bin_info/metabat_bins--all_info.tsv', sep='\t')
 
 # abundances df has bin numbers as stirngs so 'none' was allowed.  Make bin_details' match.
@@ -14,7 +14,7 @@ bin_details['bin'] = bin_details['bin number'].astype(str)
 results = pd.merge(bin_details, abundances, how='outer')
 assert results.shape[0] == abundances.shape[0], 'problem with merge: lost or gain some rows.'
 
-results.to_csv('abundances_with_taxonomy_and_bin_stats.tsv', sep='\t', index=False)
+results.to_csv('./results/abundances_with_taxonomy_and_bin_stats.tsv', sep='\t', index=False)
 
 # Make a version of the table with one row per bin, and the maximum, minimum, and mean  abundances in the 88 samples. 
 max_abundance = pd.DataFrame(results.groupby(['bin'])['abundance'].max())
@@ -42,7 +42,7 @@ sort_cols = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
 sort_orders = [1]*(len(sort_cols)-3)
 sort_orders.extend([0]*3) # make abundance, Completeness, and Contamination sort by descending.
 results_summary.sort_values(by=sort_cols, ascending=sort_orders, inplace=True)
-results_summary.to_csv('abundances_stats_for_each_bin_with_taxonomy_and_bin_stats.tsv', sep='\t', index=False)
+results_summary.to_csv('./results/abundances_stats_for_each_bin_with_taxonomy_and_bin_stats.tsv', sep='\t', index=False)
 
 # summarise at the family level
 # Need to change the nan to "none" so it isn't dropped in the groupby
@@ -53,7 +53,7 @@ family_sums.reset_index(inplace=True)
 family_summary = pd.merge(family_level[['sample id', 'oxygen', 'replicate', 'week', 'family']].drop_duplicates(), family_sums) 
 # In [49]: results[results['family'].isnull()][['bin', 'sample id', 'family']]['bin'].unique()
 # Out[49]: array(['none'], dtype=object)
-family_summary.to_csv('summary_abundancy_by_family.tsv', sep='\t', index=False)
+family_summary.to_csv('./results/summary_abundancy_by_family.tsv', sep='\t', index=False)
 assert family_summary.groupby('sample id')['abundance'].sum().min() > 0.999
 assert family_summary.groupby('sample id')['abundance'].sum().max() < 1.001
 

@@ -16,26 +16,30 @@ def summarise_contigs(fasta):
     #print(headers)
     # prepare data frame
     info = pd.DataFrame({'contigName':headers})
-    info['file'] = os.path.basename(fasta)
+    filename = os.path.basename(fasta)
+    info['file'] = filename 
     info['contigs'] = info.shape[0]  
+    if "bin" in filename:
+        search_bin_name = 'bin'
+    elif "Cluster" in filename:
+        search_bin_name = 'Cluster'
 
     # get bin number
-    m = re.search('bin.([0-9]+).fa', fasta)
-    if m:
-        bin = m.group(1)
-    else:
-        bin = '??'
-    info['bin'] = bin
-
-    # column to match CheckM:
-    m = re.search('(bin.[0-9]+).fa', fasta)
+    m = re.search('({}.[0-9]+).fa*'.format(search_bin_name), fasta)  # allow .fa or .fasta
     if m:
         bin_id = m.group(1)
+    info['Bin Id'] = bin_id
+    
+    m = re.search('{}.([0-9]+)'.format(search_bin_name), bin_id)
+    if m:
+        bin_num = m.group(1)
     else:
-        bin_id = '??'
-    info['Bin Id'] = bin_id  
-    info['bin_id'] = info['Bin Id'].str.replace('.', '_')
-    #print(info)
+        bin_num = '??'
+    info['bin'] = bin_num
+
+    # column to match CheckM:
+    checkm_label = 'bin_{}'.format(bin_num)
+    info['bin_id'] = checkm_label
     return info
     
 
@@ -66,6 +70,8 @@ if __name__ == '__main__':
         print(parser.print_help())               
     else:                                        
         df = summarise_contigs_many_files(args.input)
+        print("dataframe shape: {}".format(df.shape))
+        print('save file to {}'.format(args.output))
         df.to_csv(args.output, sep='\t', index=False)
 
     print('args.input: {}'.format(args.input))
