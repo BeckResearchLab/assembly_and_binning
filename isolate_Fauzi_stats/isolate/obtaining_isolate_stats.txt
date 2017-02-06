@@ -1,0 +1,35 @@
+# Get them from waffle:
+
+waffle:individual_isolates (master) jmatsen$ pwd
+/gscratch/lidstrom/meta4_iso/data/individual_isolates
+
+# copy the corrected bins to AWS:
+(py3)waffle:individual_isolates (master) jmatsen$ pwd
+/gscratch/lidstrom/meta4_iso/data/individual_isolates
+(py3)waffle:individual_isolates (master) jmatsen$ cat copy_to_AWS.sh
+scp -i ~/.ssh/janet_matsen.pem /dacb/meta4_iso/data/individual_isolates/fastas/*.fa ec2-user@52.89.236.178:/work/m4b_binning/assembly/isolate_Fauzi_stats/isolate/genomes/nucleotide 
+
+
+==== Old ===
+waffle:checkm (master) jmatsen$ scp -i ~/.ssh/janet_matsen.pem checkm.out_err  ec2-user@35.165.146.147:/work/m4b_binning/assembly/isolate_Fauzi_stats
+checkm.out_err                                                                                                                                                                                                                  100%   52KB  51.5KB/s   00:00
+waffle:checkm (master) jmatsen$ pwd
+/dacb/meta4_iso/analysis/checkm
+
+# delete the non-bin info in vim
+
+# Change name to isolate_CheckM.txt
+[ec2-user@ip-10-0-0-158 isolate_Fauzi_stats]$ ls
+checkm.out_err  obtaining_isolate_stats.txt
+[ec2-user@ip-10-0-0-158 isolate_Fauzi_stats]$ mv checkm.out_err isolate_CheckM.txt
+
+
+# Note that these are recently generated (Jan 3, 2016)
+
+waffle:checkm (master) jmatsen$ ls -l
+total 53
+-rwxrwxrwx 1 dacb users 52752 Jan  3 11:34 checkm.out_err
+-rwxrwxrwx 1 dacb users   188 Jan  3 09:55 checkm.sh
+drwxrwxrwx 4 dacb users     0 Jan  3 10:14 results
+drwxrwxrwx 4 dacb users     0 Jan  3 09:54 toy
+
