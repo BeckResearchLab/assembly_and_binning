@@ -1,6 +1,12 @@
 *.log
 *.jobs
 *.swp
+*/.ipynb_checkpoints/*
+
+ANI/*.pdf
+ANI/*.tsv
+ANI/ANIs_by_JGI_tool/
+ANI/*.ipynb
 
 bin_info/CheckM_qa.txt
 bin_info/CheckM_results.tsv
