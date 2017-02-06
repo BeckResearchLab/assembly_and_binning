@@ -1,5 +1,5 @@
 # run prokka
 source activate py3  # for Pandas
 
-cd protein
+cd prokka
 python prokka.py
