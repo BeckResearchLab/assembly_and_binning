@@ -5,10 +5,14 @@ import re
 import pandas as pd
 
 def parse_phylophlan(path):
+    # make flexible fore metabat or mycc
     df = pd.read_csv(path, sep='\t', names=['bin_date', 'taxonomy'])
-    df['bin name'] = df['bin_date'].str.extract('(metabat_bin_[0-9]+)_[0-9]+')
-    df['bin number'] = df['bin_date'].str.extract('metabat_bin_([0-9]+)_[0-9]+')
-    df['date'] = df['bin_date'].str.extract('metabat_bin_[0-9]+_([0-9]+)')
+    #df['bin name'] = df['bin_date'].str.extract('(metabat_bin_[0-9]+)_[0-9]+')
+    #df['bin number'] = df['bin_date'].str.extract('metabat_bin_([0-9]+)_[0-9]+')
+    #df['date'] = df['bin_date'].str.extract('metabat_bin_[0-9]+_([0-9]+)')
+    df['bin name'] = df['bin_date'].str.extract('([A-z]+_bin_[0-9]+)_[0-9]+')
+    df['bin number'] = df['bin_date'].str.extract('[A-z]_bin_([0-9]+)_[0-9]+')
+    df['date'] = df['bin_date'].str.extract('[A-z]+_bin_[0-9]+_([0-9]+)')
     return df
 
 def taxonomy_to_columns(df):
