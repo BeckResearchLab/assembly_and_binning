@@ -2,11 +2,20 @@
 *.jobs
 *.swp
 */.ipynb_checkpoints/*
+*/__pycache__/*
 
 ANI/*.pdf
 ANI/*.tsv
 ANI/ANIs_by_JGI_tool/
 ANI/*.ipynb
+abundances/results/
+
+assess_sample_mappings_to_contigs/*.ipynb
+assess_sample_mappings_to_contigs/*.pdf
+assess_sample_mappings_to_contigs/figures/
+assess_sample_mappings_to_contigs/results/
+assess_sample_mappings_to_contigs/retired/
+assess_unbinned_reads_across_samples/data/
 
 bin_info/CheckM_qa.txt
 bin_info/CheckM_results.tsv
@@ -23,9 +32,20 @@ data/prot.accession2taxid.txt
 
 holding_area/
 
+map_reads/final.contigs.fa.*
+
 metabat335/
+*/genomes/prokka/*.csv
+*/genomes/prokka/results/
+isolate_CheckM.txt
+isolate_Fauzi_stats/isolate/genomes/prokka/results/
+isolate_Fauzi_stats/isolate/genomes/prokka/summary.csv
+
 prokka/results/
 prokka/summary.csv
+
+phylophlan/*.txt
+phylophlan/*.nwk
 
 *.bam
 *.bai
