@@ -4,19 +4,19 @@ import string
 
 from Bio import SeqIO
 
-def new_filename(n):
-    return 'contigs_longer_than_{}bp.fa'.format(n)
+def new_filename(n_min):
+    return 'contigs_longer_than_{}bp.fa'.format(n_min)
 
-def omit_shorter_than_n_bp(original_path, n):
-    outname = new_filename(n)
-    print('save file with contigs longer than {}bp as {}'.format(n, outname))
+def omit_shorter_than_n_bp(original_path, n_min):
+    outname = new_filename(n_min)
+    print('save file with contigs longer than {}bp as {}'.format(n_min, outname))
     outfile = open(outname, 'w')
 
     for record in SeqIO.parse(original_path, "fasta"):
         record_id = record.id 
 
         # get rid of the shorties
-        if len(record.seq) < n:
+        if len(record.seq) <= n_min:
             continue
 
         outfile.write("> " + record.id + "\n")
@@ -28,12 +28,12 @@ def omit_shorter_than_n_bp(original_path, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trim out contigs shorter than the specified length from a fasta file.')
-    parser.add_argument('--fasta', dest='fasta', type=str, help='fasta source to pick contigs from')
-    parser.add_argument('--len', dest='len', type=int, help='cutoff size, bp')
+    parser.add_argument('fasta', type=str, help='fasta source to pick contigs from')
+    parser.add_argument('--min', dest='min', type=int, help='minimum contig size for inclusion, bp')
     args = parser.parse_args()
 
-    if args.len is None:
+    if args.min is None:
         print(parser.print_help())
     else:
-        omit_shorter_than_n_bp(args.fasta, args.len)
+        omit_shorter_than_n_bp(args.fasta, args.min)
     
