@@ -3,6 +3,7 @@ import itertools
 import multiprocessing
 import os
 import pprint
+import re
 import subprocess
 
 import pandas as pd
@@ -13,7 +14,7 @@ def get_files(dirname):
 
 def run_prokka(fasta, threads):
     fname = os.path.basename(fasta)
-    path_chunks = fname.rstrip('.fa') 
+    path_chunks = fname.rstrip('.fa').split('/')
     # remove '' from end
     path_chunks = [p for p in path_chunks if len(p) > 0]
     print(path_chunks)
@@ -24,15 +25,23 @@ def run_prokka(fasta, threads):
     if not os.path.exists(dirname):
         os.mkdir(dirname)
 
-    label = dirname
+    stdout_path =  os.path.join(dirname, 'prokka.out')
+    stdout = open(stdout_path, 'w') 
+    stderr_path =  os.path.join(dirname, 'prokka.err')
+    stderr = open(stderr_path, 'w') 
+
+    label = re.sub('_group[_0-9]+', '', dirname) 
     cmd = ['prokka', fasta, '--force', 'ON', 
             '--locustag', label, '--genus', label, '--species', label, '--strain', 'label', 
+            '--outdir', dirname,
             '--metagenome', 'ON', '--cpus', threads]
-    print('----- command as string -------')
-    print([str(s) for s in cmd])
+    print('----- command to run -------')
     command_string = ' '.join([str(s) for s in cmd])
-    print('run command {}'.format(command_string))
-    subprocess.call(cmd)
+    print('run command:\n{}'.format(command_string))
+    subprocess.check_call(cmd, stdout=stdout, stderr=stderr)
+
+    stdout.close()
+    stderr.close()
 
     
 def test_call(x):
