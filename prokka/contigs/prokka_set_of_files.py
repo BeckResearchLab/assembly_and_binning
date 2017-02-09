@@ -12,14 +12,20 @@ def get_files(dirname):
     fastas =  os.listdir(dirname)
     return [os.path.join(dirname, f) for f in fastas]
 
+def general_name_from_path(fasta):
+    general_name = re.sub('_group[._0-9fasta]+', '', os.path.basename(fasta)) 
+    return general_name
+    
 def run_prokka(fasta, threads):
     fname = os.path.basename(fasta)
-    path_chunks = fname.rstrip('.fa').split('/')
-    # remove '' from end
-    path_chunks = [p for p in path_chunks if len(p) > 0]
-    print(path_chunks)
+    general_name = general_name_from_path(fasta) #re.sub('_group[._0-9fasta]+', '', fname)
+    contigs_name = re.sub('.fa[sta]*', '', fname)
 
-    dirname = path_chunks[-1]
+    print('general_name: {}'.format(general_name))
+    if not os.path.exists(general_name):
+        os.mkdir(general_name)
+    dirname = os.path.join(general_name, contigs_name)
+
     print('dirname: {}'.format(dirname))
     # make a dir in this prokka place for the annotations
     if not os.path.exists(dirname):
@@ -30,9 +36,9 @@ def run_prokka(fasta, threads):
     stderr_path =  os.path.join(dirname, 'prokka.err')
     stderr = open(stderr_path, 'w') 
 
-    label = re.sub('_group[_0-9]+', '', dirname) 
     cmd = ['prokka', fasta, '--force', 'ON', 
-            '--locustag', label, '--genus', label, '--species', label, '--strain', 'label', 
+            '--locustag', general_name, '--genus', general_name, 
+            '--species', general_name, '--strain', general_name, 
             '--outdir', dirname,
             '--metagenome', 'ON', '--cpus', threads]
     print('----- command to run -------')
@@ -42,7 +48,6 @@ def run_prokka(fasta, threads):
 
     stdout.close()
     stderr.close()
-
     
 def test_call(x):
     #subprocess.call(['echo', 'x', ';', 'echo', x])
@@ -61,6 +66,10 @@ def run_all(source_contig_dir, threads_per_prokka):
         count, threads_per_prokka))
     processes = min(count // threads_per_prokka, len(fastas))
     print('use {} pool.map processes'.format(processes))
+    
+    general_name = general_name_from_path(fastas[0])
+    if not os.path.exists(general_name):
+        os.mkdir(general_name)
 
     pool = multiprocessing.Pool(processes=processes)
     #pool.map(test_call, ['a', 'b', 'c'])
