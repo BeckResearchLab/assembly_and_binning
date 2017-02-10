@@ -10,11 +10,13 @@ def prep_filename(gff_dir):
     return os.path.join(gff_dir, '{}_gffs_concatenated.gff'.format(gff_dir))    
 
 def combine_gffs(gff_file_list, filename):
+    # sort gff files, just in case
+    gff_file_list = sorted(gff_file_list)
 
     with open(filename, 'w') as outfile:
         file_num = 1
         for f in gff_file_list:
-            print('get the good stuff from {}'.format(filename))
+            print('get the good stuff from {}'.format(f))
             with open(f) as f1:
                 for line_num, line in enumerate(f1):        #keep the header from file1
                     # The first line is `##gff-version 3`.  Keep that for the first file. 
